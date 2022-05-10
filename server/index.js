@@ -1,23 +1,34 @@
-const express = require('express');
+const express = require("express");
 let app = express();
 
-app.use(express.static(__dirname + '/../client/dist'));
+// internal module
+const { save, getAll } = require("../database");
+const { getReposByUsername } = require("../helpers/github");
 
-app.post('/repos', function (req, res) {
-  // TODO - your code here!
-  // This route should take the github username provided
-  // and get the repo information from the github API, then
-  // save the repo information in the database
+// middleware
+app.use(express.static(__dirname + "/../client/dist"));
+
+// accept json data
+app.use(express.json()); // accept json data incoming
+
+app.post("/repos", function (req, res) {
+  const username = req.body.username;
+
+  getReposByUsername(username).then(githubRes => {
+    save(githubRes.data).then(function () {
+      res.sendStatus(200);
+    });
+  });
 });
 
-app.get('/repos', function (req, res) {
-  // TODO - your code here!
-  // This route should send back the top 25 repos
+app.get("/repos", function (req, res) {
+  getAll().then(function (data) {
+    res.json(data);
+  });
 });
 
 let port = 1128;
 
-app.listen(port, function() {
+app.listen(port, function () {
   console.log(`listening on port ${port}`);
 });
-
